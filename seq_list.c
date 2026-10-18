@@ -142,7 +142,7 @@ int Sqinsert(SqList *list,int pos,int value){
     return 1;
 }
 
-void Sqtest2(){
+int Sqtest2(){
     int x=0;
     SqList list;
     InitLsit(&list);
@@ -200,3 +200,42 @@ void Sqtest2(){
  * 当删除最后一个元素时，是否还需要移动其他元素？
  * 完成后保存文件，告诉我“检查代码”；也可以让我代为运行测试。
  */
+
+ int Sqdelele(SqList *list,int pos){
+    if(pos<0||pos>=list->length||list->length==0){
+        return 0; 
+    }
+    for(int i=0;i<list->length-1;i++){
+        if(i>=pos){
+            list->data[i]=list->data[i+1];
+        }
+    }
+    list->length--;
+    return 1;
+ }
+
+ int main(){
+    int x=0;
+    SqList list;
+    InitLsit(&list);
+    while(scanf("%d",&x)==1){
+        if(x==-999){
+            break;
+        }
+        if(list.length>=100){
+            printf("full\n");
+            break;
+        }
+        list.data[list.length++]=x;
+    }
+    int pos;
+    if(scanf("%d",&pos)!=1){
+        printf("false");
+        return 0;
+    }
+    if(Sqdelele(&list,pos)!=1){
+        printf("false");
+        return 0;
+    }
+    PrintLsit(list);
+ }
