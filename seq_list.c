@@ -126,7 +126,77 @@ void SqlistTest1(){
  * 先自行思考：为了保留原有数据，元素移动应该从哪一端开始？
  * 完成后保存文件，告诉我“检查代码”。
  */
-int main(){
-    
+int Sqinsert(SqList *list,int pos,int value){
+    if(pos<0||pos>list->length){
+        return 0;
+    }
+    if(list->length>=Maxsize){
+        printf("full");
+        return 0;
+    }
+    for(int i=list->length-1;i>=pos;i--){
+        list->data[i+1]=list->data[i];
+    }
+    list->data[pos]=value;
+    list->length++;
+    return 1;
+}
+
+void Sqtest2(){
+    int x=0;
+    SqList list;
+    InitLsit(&list);
+    while(scanf("%d",&x)==1){
+        if(x==-999){
+            break;
+        }
+        if(list.length>=100){
+            printf("full\n");
+            break;
+        }
+        list.data[list.length++]=x;
+    }
+    int pos,value;
+    if(scanf("%d,%d",&pos,&value)!=2){
+        printf("false");
+        return 0;
+    }
+    PrintLsit(list);
+    if(Sqinsert(&list,pos,value)!=1){
+        printf("false");
+        return 0;
+    }
+    PrintLsit(list);
     return 0;
 }
+/*
+ * 第 3 题——顺序表的删除（第 2 题已通过）
+ *
+ * 全部新增代码由你自行编写；保留已有操作，自行设计删除函数与测试。
+ *
+ * 功能要求：
+ * - 接收顺序表和待删除元素的下标 pos，下标从 0 开始。
+ * - 删除该元素，后续元素依次前移一位，保持原有顺序。
+ * - 成功后 length 减少 1，返回 1；失败返回 0。
+ * - 合法位置为 0 到 length - 1，包含端点。
+ * - 空表或位置非法时，原有元素和 length 必须保持不变。
+ * - 仍约定表指针有效，原表的 length 在 0 到 Maxsize 之间。
+ * - 不要求返回被删除元素，也不要求清零有效范围之外的存储空间。
+ * - 函数名与参数名自行决定，不需要增加新的数组或动态分配内存。
+ *
+ * 自测与验收（检查返回值、length 和有效元素顺序）：
+ * 1. 从 10 15 20 30 中删除下标 1，得到 10 20 30，长度为 3。
+ * 2. 继续删除下标 0，得到 20 30，长度为 2。
+ * 3. 继续删除最后一个元素，得到 20，长度为 1。
+ * 4. 删除唯一元素，得到空表，长度为 0，遍历只输出换行。
+ * 5. 对空表删除下标 0，应失败且表不变。
+ * 6. 对非空表分别删除下标 -1 和 length，应失败且表不变。
+ * 7. 构造满表，分别测试头部、中间、尾部删除；每次从满表重新开始，
+ *    成功后长度应为 Maxsize - 1，剩余元素顺序正确。
+ * 8. 使用包含重复值和负数的表，确认按下标删除，而不是按值删除。
+ * 9. 删除后再使用上一题的插入函数，确认两种操作可以配合使用。
+ *
+ * 思考：删除和插入时，元素移动的方向是否相同？
+ * 当删除最后一个元素时，是否还需要移动其他元素？
+ * 完成后保存文件，告诉我“检查代码”；也可以让我代为运行测试。
+ */
