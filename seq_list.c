@@ -214,7 +214,7 @@ int Sqtest2(){
     return 1;
  }
 
- int main(){
+ int PrintTest(){
     int x=0;
     SqList list;
     InitLsit(&list);
@@ -238,6 +238,7 @@ int Sqtest2(){
         return 0;
     }
     PrintLsit(list);
+    return 0;
  }
 /*
  * 第 4 题——顺序表的查找与修改（第 3 题已通过）
@@ -341,17 +342,30 @@ int SqModify(SqList *list,int pos,int value){
 
  int SqdeleteA(SqList *list,int value){
     int deletenum=0;
-    for(int i=0;i<list->length;i++){
+    int i=0;
+    while(i<list->length){
         if(list->data[i]==value){
-            Sqdelete(&list,i);
+            Sqdelete(list,i);
             deletenum++;
+            continue;
         }
+        i++;
     }
     return deletenum;
  }
 
  int SqdeleteB(SqList *list,int value){
-    
+    int deletenum=0;
+    int j=0;
+    for(int i=0;i<list->length;i++){
+        if(list->data[i]==value){
+            deletenum++;
+            continue;
+        }
+        list->data[j++]=list->data[i];
+    }
+    list->length=j;
+    return deletenum;
  }
 
 /*
@@ -392,3 +406,97 @@ int SqModify(SqList *list,int pos,int value){
  * 完成后告诉我“检查代码”。本题通过后进入单链表，
  * 从结点结构、创建带头结点的空链表和遍历开始。
  */
+/* 以下为代写的验收测试，已有数据结构操作保持原样。 */
+static int checks = 0;
+static int failures = 0;
+
+static void check(int condition, const char *name)
+{
+    checks++;
+    printf("%s: %s\n", condition ? "PASS" : "FAIL", name);
+    if (!condition) failures++;
+}
+
+/* 只比较有效元素；有效范围外的旧数据不影响顺序表内容。 */
+static int sameList(const SqList *list, const int expected[], int length)
+{
+    if (list->length != length) return 0;
+    for (int i = 0; i < length; i++) {
+        if (list->data[i] != expected[i]) return 0;
+    }
+    return 1;
+}
+
+int main(void)
+{
+    SqList list;
+    int result;
+    InitLsit(&list);
+    check(list.length == 0, "initialize");
+
+    for (int i = 0; i < 3; i++) {
+        result = Sqinsert(&list, list.length, (i + 1) * 10);
+        const int expected[] = {10, 20, 30};
+        check(result == 1 && sameList(&list, expected, i + 1), "append");
+    }
+    result = Sqinsert(&list, 1, 15);
+    const int inserted[] = {10, 15, 20, 30};
+    check(result == 1 && sameList(&list, inserted, 4), "insert middle");
+
+    int pos = SqSearch(list, 20);
+    result = pos != -1 ? SqModify(&list, pos, 25) : 0;
+    const int modified[] = {10, 15, 25, 30};
+    check(pos == 2 && result == 1 && sameList(&list, modified, 4), "search then modify");
+
+    result = Sqdelete(&list, 0);
+    const int headDeleted[] = {15, 25, 30};
+    check(result == 1 && sameList(&list, headDeleted, 3), "delete head");
+    result = Sqdelete(&list, list.length - 1);
+    const int tailDeleted[] = {15, 25};
+    check(result == 1 && sameList(&list, tailDeleted, 2), "delete tail");
+    check(SqSearch(list, 99) == -1 && sameList(&list, tailDeleted, 2), "missing value");
+    InitLsit(&list);
+    check(list.length == 0, "reinitialize");
+
+    int expected[Maxsize];
+    int built = 1;
+    for (int i = 0; i < Maxsize; i++) {
+        expected[i] = i;
+        if (Sqinsert(&list, list.length, i) != 1) built = 0;
+    }
+    check(built && sameList(&list, expected, Maxsize), "build full list");
+    result = Sqinsert(&list, 0, 999);
+    printf("\n"); /* 插入函数的 full 提示没有换行。 */
+    check(result == 0 && sameList(&list, expected, Maxsize), "reject full insertion unchanged");
+    result = Sqdelete(&list, list.length - 1);
+    check(result == 1 && sameList(&list, expected, Maxsize - 1), "delete from full list");
+    result = Sqinsert(&list, list.length, -1);
+    expected[Maxsize - 1] = -1;
+    check(result == 1 && sameList(&list, expected, Maxsize), "refill list");
+
+    int invalid[] = {-1, list.length};
+    for (int i = 0; i < 2; i++) {
+        result = Sqdelete(&list, invalid[i]);
+        check(result == 0 && sameList(&list, expected, Maxsize), "reject invalid deletion unchanged");
+        result = SqModify(&list, invalid[i], 999);
+        check(result == 0 && sameList(&list, expected, Maxsize), "reject invalid modification unchanged");
+    }
+    /* 在非满表测试非法插入，确保确实检验位置是否合法。 */
+    result = Sqdelete(&list, list.length - 1);
+    check(result == 1 && sameList(&list, expected, Maxsize - 1), "prepare nonfull list");
+    int badInsert[] = {-1, list.length + 1};
+    for (int i = 0; i < 2; i++) {
+        result = Sqinsert(&list, badInsert[i], 999);
+        check(result == 0 && sameList(&list, expected, Maxsize - 1), "reject invalid insertion unchanged");
+    }
+
+    InitLsit(&list);
+    check(SqSearch(list, 10) == -1 && list.length == 0, "search empty list");
+    result = Sqdelete(&list, 0);
+    check(result == 0 && list.length == 0, "delete empty list");
+    result = SqModify(&list, 0, 10);
+    check(result == 0 && list.length == 0, "modify empty list");
+
+    printf("\nChecks: %d, passed: %d, failed: %d\n", checks, checks - failures, failures);
+    return failures ? 1 : 0;
+}
