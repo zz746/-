@@ -364,7 +364,23 @@ int Linkmodify(linked_list *h,int pos,int value){
  * - 不反复调用按位置删除或查找函数，直接沿 next 单次遍历完成。
  * - 时间复杂度 O(n)，额外空间 O(1)，链表约定无环。
  * - 不要求处理 NULL 头指针；有效的空链表仍有头结点。
- *
+ */
+int Linkdeleteall(linked_list *h,int value){
+int num=0;
+linked_list *p=h;
+while(p!=NULL){
+    if(p->next!=NULL&&p->next->data==value){
+        linked_list *f=p->next;
+        p->next=f->next;
+        free(f);
+        num++;
+    }else{
+        p=p->next;
+    }
+}
+return num;
+}
+/*
  * 自测与验收（同时检查返回数量、剩余元素和长度）：
  * 1. 10 20 20 30 20 删除 20：得到 10 30，返回 3。
  * 2. 20 20 10 删除 20：得到 10，返回 2。
