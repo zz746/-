@@ -33,7 +33,7 @@
 typedef struct Queue{
     int data[Maxsize];
     int front;
-    int rear
+    int rear;
 }Queue;
 
  /* A. 初始化。
@@ -48,7 +48,10 @@ void QueueInit(Queue *queue){
  * - 队空返回 1，否则返回 0，不改变队列状态。
  */
 int QueueEmpty(Queue *queue){
-
+    if(queue->front==queue->rear){
+        return 1;
+    }
+    return 0;
 }
  /* C. 入队。
  * - 接收队列与整数 value。
@@ -56,8 +59,16 @@ int QueueEmpty(Queue *queue){
  * - 否则将 value 放到 rear 指定的位置，再使 rear 循环前进一步。
  * - 成功返回 1，front 不变，不移动已有元素。
  * - 时间复杂度应为 O(1)，容量判断引用宏，不在函数中写死 100。
- *
- * 自测与验收：
+ */
+int QueuePush(Queue *queue,int value){
+    if((queue->rear+1)%Maxsize==queue->front){
+        return 0;
+    }
+    queue->data[queue->rear]=value;
+    queue->rear=(queue->rear+1)%Maxsize;
+    return 1;
+}
+ /* 自测与验收：
  * 1. 初始化后 front、rear 都为 0，判空返回 1。
  * 2. 入队 10，front 为 0、rear 为 1，数组下标 0 保存 10。
  * 3. 再入队 20、30，rear 为 3，前 3 个元素依次为 10、20、30。
@@ -80,4 +91,78 @@ int QueueEmpty(Queue *queue){
  *   .\queue.exe
  * 当前只有注释，编写完整程序后才能直接运行。
  * 完成后告诉我“检查队列代码”。
+ */
+
+/*
+ * 队列第 2 题——出队、读取队头与统计长度（第 1 题已通过）
+ *
+ * 所有新增代码仍由你自行编写，不提供函数骨架。
+ * 保留已有操作，继续采用空出一个位置的循环队列。
+ * front 指向队头元素，rear 指向下一次入队的写入位置。
+ *
+ * A. 出队。
+ * - 接收队列指针和一个 int 类型的输出指针。
+ * - 非空时，将当前队头元素写入输出变量，再让 front 循环前进一步。
+ * - 成功返回 1，rear 不变，其他元素不移动。
+ * - 不要求清零原队头位置，出队只改变逻辑范围。
+ * - 空队列返回 0，数组、front、rear 和输出变量均不变。
+ */
+int QueuePop(Queue *queue,int *value){
+    if(QueueEmpty(queue)){
+        return 0;
+    }
+    *value=queue->data[queue->front];
+    queue->front=(queue->front+1)%Maxsize;
+    return 1;
+}
+ /* B. 读取队头。
+ * - 接收队列指针和一个 int 类型的输出指针。
+ * - 非空时，通过输出指针带回队头元素，返回 1。
+ * - 队列的数组、front 和 rear 均保持不变。
+ * - 空队列返回 0，输出变量也保持不变。
+ */
+int QueueGet(Queue *queue,int *value){
+    if(QueueEmpty(queue)){
+        return 0;
+    }
+    *value=queue->data[queue->front];
+    return 1;
+}
+ /* C. 统计长度。
+ * - 接收队列，返回当前有效元素数量，范围为 0 到 Maxsize - 1。
+ * - 不改变队列，不使用循环，不额外保存或维护长度字段。
+ * - 注意 rear 可能小于 front，直接 rear - front 可能得到负数。
+ * - 结合数组长度和取模运算，自行推导适用于绕回状态的表达式。
+ */int QueueLenght(Queue *queue){
+    if(QueueEmpty(queue)){
+        return 0;
+    }
+    return (Maxsize-queue->front+queue->rear)%Maxsize;
+ }
+ /* 参数约定：
+ * - 队列指针和输出指针有效，队列状态合法。
+ * - 输出变量独立于队列，不指向队列内部。
+ * - 操作状态用返回值表示，元素值通过输出指针带回；
+ *   0、-1 等任意整数都可作为合法队列数据。
+ * - 三个操作的时间复杂度均应为 O(1)。
+ *
+ * 自测与验收：
+ * 1. 初始化后长度为 0。把输出变量设为 123，分别尝试读取队头、
+ *    出队，均返回 0，输出变量仍为 123，队列不变。
+ * 2. 依次入队 10、20、30，长度为 3；读取两次队头都得到 10，
+ *    front、rear 和长度均不变。
+ * 3. 连续出队得到 10、20、30，长度依次变为 2、1、0，最后判空为 1。
+ * 4. 再次出队失败；随后入队 -5，读取与出队均正确。
+ * 5. 测试数据为 0、-1 和重复值，确认不会与失败状态混淆。
+ * 6. 绕回测试：在测试代码中构造 front = rear = Maxsize - 1 的空队列，
+ *    然后入队 10、20。此时 front 为 Maxsize - 1，rear 为 1，长度为 2。
+ *    第一次出队得到 10，front 绕回 0，长度变为 1；
+ *    第二次出队得到 20，front 等于 rear，长度变为 0。
+ * 7. 满队列长度为 Maxsize - 1；出队后再入队，应重新变满，
+ *    剩余元素仍按先进先出顺序排列。
+ *
+ * 核心函数由你实现，大量边界测试可交给我运行，不要求菜单。
+ * 思考：出队为什么移动 front，而不是 rear？
+ * 长度表达式为什么需要在取模之前考虑加上数组长度？
+ * 完成后告诉我“检查队列代码”。本题通过后还剩一道应用题。
  */
