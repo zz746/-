@@ -178,8 +178,34 @@ int QueueGet(Queue *queue,int *value){
  * - 从 1 报到 m，报到 m 的人出圈。
  * - 下一位从 1 重新报数，重复直到只剩一人。
  * - 编写函数，接收整数 n、m，返回最后留下的人的编号。
- *
- * 输入与返回值：
+ */
+int test(int n,int m){
+    int pop;
+    Queue queue;
+    QueueInit(&queue);
+    if(!(1<=n&&n<=(Maxsize-1)&&m>=1)){
+        return 0;
+    }
+    for(int i=1;i<=n;i++){
+        if(!QueuePush(&queue,i))
+        return 0;
+    }
+    while(QueueLenght(&queue)!=1){
+        for(int j=1;j<m;j++){
+            if(!QueuePop(&queue,&pop))
+            return 0;
+            if(!QueuePush(&queue,pop))
+            return 0;
+        }
+        if(!QueuePop(&queue,&pop))
+        return 0;
+    }
+    int last;
+    if(!QueueGet(&queue,&last))
+    return 0;
+    return last;
+}
+ /* 输入与返回值：
  * - 合法范围为 1 <= n <= Maxsize - 1，m >= 1。
  * - n 超出范围或 m <= 0 时返回 0，不开始模拟。
  * - 合法输入返回 1 到 n 之间的编号。
