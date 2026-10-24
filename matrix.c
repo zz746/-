@@ -85,8 +85,7 @@ int Read(matrix *matrix,int i,int j,int *value){
     if(i>=j){
         *value=matrix->data[(((1+i)*i)/2+j)];
         return 1;
-    }
-    if(i<j){
+    }else{
         *value=matrix->data[(((1+j)*j)/2+i)];
         return 1;
     }
@@ -135,14 +134,15 @@ int Read(matrix *matrix,int i,int j,int *value){
 typedef struct matrix_c{
     /* data */
     int n;
+    int type;
     int data[((1+Maxsize)*Maxsize)/2+1];
 }matrix_c;
 
 int Squeese_c(int g[Maxsize][Maxsize],int n,int type,int c,matrix_c *matrix){
-    if(n<=0||n>Maxsize){
+    if(n<=0||n>Maxsize||(type!=0&&type!=1)){
         return 0;
     }
-    if(type=0){
+    if(type==0){
         int num=0;
         for(int i=0;i<n;i++){
             for(int j=0;j<=i;j++){
@@ -150,38 +150,43 @@ int Squeese_c(int g[Maxsize][Maxsize],int n,int type,int c,matrix_c *matrix){
             }
         }
         matrix->data[num]=c;
+        matrix->n=n;
+        matrix->type=type;
         return 1;
-    }else if(type=1){
+    }else{
         int num=0;
         for(int i=0;i<n;i++){
-            for(int j=0;j<=matrix->n-i;j++){
+            for(int j=i;j<n;j++){
                 matrix->data[num++]=g[i][j];
             }
         }
         matrix->data[num]=c;
+        matrix->n=n;
+        matrix->type=type;
         return 1;
     }
 }
 
-int Read_c(matrix_c *matrix,int i,int j,int type,int *value){
-    if(i>matrix->n-1||j>matrix->n-1||i<0||j<0){
+int Read_c(matrix_c *matrix,int i,int j,int *value){
+    if(i>matrix->n-1||j>matrix->n-1||i<0||j<0||(matrix->type!=0&&matrix->type!=1)){
         return 0;
     }
-    if(type=0){
+    if(matrix->type==0){
         if(i>=j){
             *value=matrix->data[(((1+i)*i)/2+j)];
             return 1;
         }else{
-            return matrix->data[((1+matrix->n)*matrix->n)/2];
+            *value=matrix->data[((1+matrix->n)*matrix->n)/2];
+            return 1;
         }
         
-    }
-    if(type=1){
+    }else{
         if(i<=j){
-            *value=matrix->data[(matrix->n+(matrix->n-i+1))*i+j-i+1];
+            *value=matrix->data[((matrix->n+(matrix->n-i+1))*i)/2+j-i];
             return 1;
         }else{
-            return matrix->data[((1+matrix->n)*matrix->n)/2];
+            *value=matrix->data[((1+matrix->n)*matrix->n)/2];
+            return 1;
         }
         
     }
@@ -211,8 +216,55 @@ int Read_c(matrix_c *matrix,int i,int j,int type,int *value){
  * - 读取时下标合法但位于带外：成功返回 1，输出值为 0；
  *   下标本身越界：返回 0，输出变量不变；带内直接计算压缩位置。
  * - 读取 O(1)，不扫描数组或解压整张矩阵，不使用动态内存。
- *
- * 验收示例，四阶矩阵的各行为：
+ */
+typedef struct matrix_d{
+    /* data */
+    int n;
+    int data[Maxsize*3-2];
+}matrix_d;
+
+int Squeese_d(int g[Maxsize][Maxsize],int n,matrix_d *matrix){
+    int num=0;
+    if(n<=0||n>Maxsize){
+        return 0;
+    }
+    if(n==1){
+        matrix->data[num]=g[0][0];
+        matrix->n=n;
+        return 1;
+    }
+    for(int i=0;i<n;i++){
+        if(i>0&&i<n-1){
+            for(int j=i-1;j<=i+1;j++){
+                matrix->data[num++]=g[i][j];
+            }
+        }else if(i==0){
+           for(int j=i;j<=i+1;j++){
+                matrix->data[num++]=g[i][j];
+            } 
+        }else{
+            for(int j=i-1;j<=i;j++){
+                matrix->data[num++]=g[i][j];
+            }
+        }
+    }
+    matrix->n=n;
+    return 1;
+}
+
+int Read_d(matrix_d *matrix,int i,int j,int *value){
+    if(i>matrix->n-1||j>matrix->n-1||i<0||j<0){
+        return 0;
+    }
+    if(j<i-1||j>i+1){
+        *value=0;
+        return 1;
+    }
+    *value=matrix->data[(i*3-1)+j-i+2-1];
+    return 1;
+}
+
+ /* 验收示例，四阶矩阵的各行为：
  * [1,2,0,0]、[3,4,5,0]、[0,6,7,8]、[0,0,9,10]。
  * 压缩结果为 1 2 3 4 5 6 7 8 9 10，共 10 个位置。
  * - 遍历全部合法下标，对照原矩阵读取；检查带内零值、负数和重复值。
