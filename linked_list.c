@@ -402,3 +402,133 @@ return num;
  * 本题通过后，链表基础部分结束，下一阶段进入栈。
  * 完成后告诉我“检查链表代码”。
  */
+
+/*
+ * 链表课程补充题（均未完成；单链表基础 5 题已通过）
+ * 与原单链表使用不同类型名、函数名；一个源文件只保留一个 main。
+ * 全部实现由你编写；可以在 main 中切换测试，不必写交互菜单。
+ *
+ * 补充 L1：带头结点的非循环双链表。
+ * - 自行定义含 int 数据、prior 和 next 的新结点类型。
+ * - 空表头结点 prior、next 均为 NULL；首数据结点 prior 指向头结点，
+ *   末数据结点 next 为 NULL。头结点不存有效数据、不编号。
+ * - 实现创建空表、按位置插入/删除、正向/反向遍历和释放。
+ * - 数据下标从 0 开始；插入位置为 0..n，删除位置为 0..n-1。
+ * - 插删成功返回 1，位置非法或分配失败返回 0，失败后原表不变。
+ * - 正向从头结点后开始；反向先定位末数据结点，再沿 prior 走到头结点。
+ * - 检查每条相邻关系：若 a->next 为 b，则 b->prior 应为 a。
+ * - 验收：空表、单元素、头/中/尾插删、负下标及越界、分配失败；
+ *   正向 10 20 30 对应反向 30 20 10，释放后无泄漏。
+ * 思考：删除已知目标结点时，双链表比单链表少了哪一步？
+ */
+typedef struct Doublelist{
+    int data;
+    struct Doublelist *prior;
+    struct Doublelist *next;
+}Doublelist;
+
+Doublelist *DlistInit(void) {
+    Doublelist *h = malloc(sizeof(Doublelist));
+    if (h == NULL) {
+        return NULL;
+    }
+
+    h->next = NULL;
+    h->prior = NULL;
+    return h;
+}
+
+int DlsitInsert(Doublelist *h,int pos,int value){
+    Doublelist *p=(Doublelist*)malloc(sizeof(Doublelist)),*q=h;
+    if(p==NULL){
+        return 0;
+    }
+    if(pos<0){
+        free(p);
+        return 0;
+    }
+    
+    p->data=value;
+    int i=0;
+    while(q!=NULL){
+        if(i==pos){
+            p->next=q->next;
+            p->prior=q;
+            if(p->next!=NULL){
+                p->next->prior=p;
+            }
+            q->next=p;
+            return 1;
+        }
+        i++;
+        q=q->next;
+    }
+    free(p);
+    return 0;
+}
+
+int DlistDelete(Doublelist *h,int pos){
+    if(h->next==NULL||pos<0){
+        return 0;
+    }
+    Doublelist *p=h->next;
+    int i=0;
+    while(p!=NULL){
+        if(i==pos){
+            if(p->next==NULL){
+                p->prior->next=p->next;
+                free(p);
+                return 1;
+            }
+            p->prior->next=p->next;
+            p->prior->next->prior=p->prior;
+            free(p);
+            return 1;
+        }
+        i++;
+        p=p->next;
+    }
+    return 0;
+
+}
+
+void DlistFree(Doublelist *h){
+    Doublelist *f=h,*p=h;
+    while(f!=NULL){
+        p=p->next;
+        free(f);
+        f=p;
+    }
+}
+ /* 补充 L2：带头结点的循环单链表。
+ * - 使用独立类型或明确区分的函数；空表 head->next == head。
+ * - 非空表末数据结点 next 指向 head，不能以 NULL 作为遍历终点。
+ * - 实现创建、尾插、按位置删除、遍历和释放，位置与返回状态沿用 L1。
+ * - 遍历不得输出头结点；释放所有数据结点后再释放头结点。
+ * - 不引入环之外的结点，不把普通单链表的释放函数直接用于循环链表。
+ * - 验收：空表遍历结束；连续尾插 10、20、30；分别删首尾、唯一结点；
+ *   删空后恢复 head->next == head，再插入可用；非法操作不改变环。
+ * - 再画出带头结点的循环双链表，说明空表的 prior、next 及首尾链接。
+ *   该部分先画图与注释推演，不要求再复制一套全部操作。
+ *
+ * 补充 L3：静态链表（数组游标）。
+ * - 定义独立的固定容量结点数组，用整数下标代替指针；结点包含 data、next。
+ * - 约定数组长度 100：下标 0 为有效链头结点，下标 99 为备用链头结点，
+ *   可用数据结点下标为 1..98，-1 表示链尾。两个头结点不存有效数据。
+ * - 初始化时有效链为空，备用链依次串起 1..98。
+ * - 实现“从备用链取一个空位”“将删除的空位归还备用链”、按位置插删、
+ *   有效链遍历。不得使用 malloc/free，不能把数据搬移当作链表插删。
+ * - 插入成功返回 1，非法位置或备用链耗尽返回 0，失败时两条链均不变；
+ *   删除合法时返回 1，非法时返回 0，被删除空位必须归还备用链。
+ * - 验收：填满 98 个数据结点后插入失败；删除一个再插入成功；反复回收；
+ *   有效链和备用链无重复下标、无交叉，合计始终覆盖全部 98 个数据槽。
+ * - 数组对象自身无需逐结点释放；初始化和回收含义要与动态链表区分。
+ *
+ * 补充 L4：比较与复杂度。
+ * - 在注释中比较单链表、双链表、循环链表和静态链表的结束条件、
+ *   空表表示、前驱获取方式以及释放/回收方法。
+ * - 顺序表与链表的总体选型题见 seq_list.c 的 S2，不重复作答。
+ *
+ * 以上是课程存储变体补充，不表示前述基础题需要重做。
+ * 每次只完成一项，再告诉我对应题号进行检查。
+ */
