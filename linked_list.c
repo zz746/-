@@ -500,6 +500,41 @@ void DlistFree(Doublelist *h){
         f=p;
     }
 }
+
+int DlistPrint(Doublelist *h){
+    if(h->next==NULL){
+        printf("\n");
+        return 0;
+    }
+    Doublelist *p=h->next;
+    printf("%d",p->data);
+    p=p->next;
+    while(p!=NULL){
+        printf(" %d",p->data);
+        p=p->next;
+    }
+    printf("\n");
+    return 1;
+}
+
+int DlistBackprint(Doublelist *h){
+    if(h->next==NULL){
+        printf("\n");
+        return 0;
+    }
+    Doublelist *p=h->next;
+    while (p->next!=NULL){
+        p=p->next;
+    }
+    printf("%d",p->data);
+    p=p->prior;
+    while (p!=h){
+        printf(" %d",p->data);
+        p=p->prior;
+    }
+    printf("\n");
+    return 1;
+}
  /* 补充 L2：带头结点的循环单链表。
  * - 使用独立类型或明确区分的函数；空表 head->next == head。
  * - 非空表末数据结点 next 指向 head，不能以 NULL 作为遍历终点。
@@ -510,8 +545,59 @@ void DlistFree(Doublelist *h){
  *   删空后恢复 head->next == head，再插入可用；非法操作不改变环。
  * - 再画出带头结点的循环双链表，说明空表的 prior、next 及首尾链接。
  *   该部分先画图与注释推演，不要求再复制一套全部操作。
- *
- * 补充 L3：静态链表（数组游标）。
+ */
+typedef struct Circular_singly_list{
+    int data;
+    struct Circular_singly_list *next;
+
+}Circular_singly_list;
+
+Circular_singly_list * CirlsitInit(void){
+    Circular_singly_list *h=(Circular_singly_list*)malloc(sizeof(Circular_singly_list));
+    if(h==NULL){
+        return NULL;
+    }
+    h->next=h;
+    return h;
+}
+
+int CirlistAdds(Circular_singly_list *h,int value){
+    Circular_singly_list *p=h;
+    while(p->next!=h){
+        p=p->next;
+    }
+    Circular_singly_list *q=(Circular_singly_list*)malloc(sizeof(Circular_singly_list));
+    if(q==NULL){
+        return 0;
+    }
+    q->data=value;
+    q->next=p->next;
+    p->next=q;
+    return 1; 
+
+}
+
+int CirlistDelete(Circular_singly_list *h,int pos){
+    Circular_singly_list *p=h,*q;
+    if(p->next!=h&&pos>=0){
+        for(int i=0;i<pos;i++){
+            if(p->next==h){
+                return 0;
+            }
+            p=p->next;
+        }
+        if(p->next==h){
+                return 0;
+            }
+        q=p->next;
+        p->next=p->next->next;
+        free(q);
+        return 1;
+    }
+    return 0;
+}
+
+ /* 补充 L3：静态链表（数组游标）。
  * - 定义独立的固定容量结点数组，用整数下标代替指针；结点包含 data、next。
  * - 约定数组长度 100：下标 0 为有效链头结点，下标 99 为备用链头结点，
  *   可用数据结点下标为 1..98，-1 表示链尾。两个头结点不存有效数据。
